@@ -14,6 +14,30 @@ export type UdidiResponseType = {
   };
 };
 
+export type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array;
+
+export type TypedArrayNames =
+  | "TypedArray"
+  | "Int8Array"
+  | "Uint8Array"
+  | "Uint8ClampedArray"
+  | "Int16Array"
+  | "Uint16Array"
+  | "Int32Array"
+  | "Uint32Array"
+  | "Int64Array"
+  | "Float32Array"
+  | "Float64Array";
+
 export type UdidiTypes =
   | "NaN"
   | "Null"
