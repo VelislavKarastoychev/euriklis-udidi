@@ -1,3 +1,4 @@
+// src/Models/index.ts
 "use strict";
 
-export { CheckConnection } from "./CheckConnection";
+export { TestConnection } from "./TestConnection";
