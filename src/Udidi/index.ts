@@ -5,6 +5,8 @@ import type {
   AsyncFunction,
   Integer,
   SchemaOf,
+  TypedArray,
+  TypedArrayNames,
   UdidiSchemaType,
 } from "../../Types";
 
@@ -78,13 +80,11 @@ export class UdidiBooleanSchema extends UdidiSchema<boolean> {
   }
 
   isTrue(): UdidiBooleanSchema {
-    this.updateSchema = { $same: true };
-    return this;
+    return this.update({ $same: true });
   }
 
   isFalse(): UdidiBooleanSchema {
-    this.updateSchema = { $same: false };
-    return this;
+    return this.update({ $same: false });
   }
 }
 
@@ -94,17 +94,14 @@ export class UdidiStringSchema extends UdidiSchema<string> {
   }
 
   hasLength(n: Integer): UdidiStringSchema {
-    this.updateSchema = { $hasLength: n };
-    return this;
+    return this.update({ $hasLength: n });
   }
 
   hasLengthLessThan(n: Integer): UdidiStringSchema {
-    this.updateSchema = { $hasLengthLessThan: n };
-    return this;
+    return this.update({ $hasLengthLessThan: n });
   }
   hasLengthGreaterThan(n: Integer): UdidiStringSchema {
-    this.updateSchema = { $hasLengthGreaterThan: n };
-    return this;
+    return this.update({ $hasLengthGreaterThan: n });
   }
 }
 
@@ -114,8 +111,7 @@ class UdidiNumberSchema extends UdidiSchema<number> {
   }
 
   isLessThan(n: number = 0): UdidiNumberSchema {
-    this.updateSchema = { $lt: n };
-    return this;
+    return this.update({ $lt: n });
   }
 
   lt(n: number = 0): UdidiNumberSchema {
@@ -132,23 +128,19 @@ class UdidiNumberSchema extends UdidiSchema<number> {
   }
 
   neq(n: number = 0): UdidiNumberSchema {
-    this.updateSchema = { $neq: n };
-    return this;
+    return this.update({ $neq: n });
   }
 
   equals(n: number): UdidiNumberSchema {
-    this.updateSchema = { $same: n };
-    return this;
+    return this.update({ $same: n });
   }
 
   isInRange(x: number, y: number): UdidiNumberSchema {
-    this.updateSchema = { $range: [x, y] };
-    return this;
+    return this.update({ $range: [x, y] });
   }
 
   isInClosedRange(x: number, y: number): UdidiNumberSchema {
-    this.updateSchema = { $closedRange: [x, y] };
-    return this;
+    return this.update({ $closedRange: [x, y] });
   }
 
   get isPositive(): UdidiNumberSchema {
@@ -161,13 +153,11 @@ class UdidiNumberSchema extends UdidiSchema<number> {
   }
 
   get isPositiveInfinity(): UdidiNumberSchema {
-    this.updateSchema = { $same: Infinity };
-    return this;
+    return this.update({ $same: Infinity });
   }
 
   get isNegativeInfinity(): UdidiNumberSchema {
-    this.updateSchema = { $same: -Infinity };
-    return this;
+    return this.update({ $same: -Infinity });
   }
 
   get isFloat(): UdidiNumberSchema {
@@ -200,7 +190,9 @@ export class UdidiNullSchema extends UdidiSchema<null> {
 
 export class UdidiArraySchema<E = unknown> extends UdidiSchema<E[]> {
   /** internal helper that keeps `$isType:"Array"` + `$every` in sync */
-  private static makeTree<S extends AnyUdidiSchema>(member: S) {
+  private static makeTree<S extends AnyUdidiSchema>(
+    member: S,
+  ): UdidiSchemaType {
     return { $isType: "Array", $every: member.schema } as UdidiSchemaType;
   }
 
@@ -213,36 +205,82 @@ export class UdidiArraySchema<E = unknown> extends UdidiSchema<E[]> {
   }
 
   hasLength(n: Integer): UdidiArraySchema {
-    this.updateSchema = { $hasLength: n };
-    return this;
+    return this.update({ $hasLength: n });
   }
 
   hasLengthLessThan(n: Integer): UdidiArraySchema {
-    this.updateSchema = { $hasLengthLessThan: n };
-    return this;
+    return this.update({ $hasLengthLessThan: n });
   }
 
   hasLengthGreaterThan(n: Integer): UdidiArraySchema {
-    this.updateSchema = { $hasLengthGreaterThan: n };
-    return this;
+    return this.update({ $hasLengthGreaterThan: n });
   }
 
   hasLengthInRange(m: Integer, n: Integer): UdidiArraySchema {
     if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
-    this.updateSchema = { $hasLengthInRange: [m, n] };
-    return this;
+    return this.update({ $hasLengthInRange: [m, n] });
   }
 
   hasLengthInClosedRange(m: Integer, n: Integer): UdidiArraySchema {
     if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
-    this.updateSchema = { $hasLengthInClosedRange: [m, n] };
-    return this;
+    return this.update({ $hasLengthInClosedRange: [m, n] });
   }
 }
 
 export class UdidiNumericArraySchema extends UdidiArraySchema<number> {
   constructor() {
     super(Udidi.number()); // delegate to generic array ctor
+  }
+}
+
+export class UdidiTypedArraySchema<
+  E extends TypedArray = TypedArray,
+> extends UdidiSchema<E> {
+  constructor(typedArray: TypedArrayNames = "TypedArray") {
+    super({ $isType: typedArray });
+  }
+
+  hasLength(n: Integer): this {
+    return this.update({ $hasLength: n });
+  }
+
+  hasLengthLessThan(n: Integer): this {
+    return this.update({ $hasLengthLessThan: n });
+  }
+  hasLengthGreaterThan(n: Integer): this {
+    return this.update({ $hasLengthGreaterThan: n });
+  }
+
+  hasLengthInRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $hasLengthInRange: [m, n] });
+  }
+
+  hasLengthInClosedRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $hasLengthInClosedRange: [m, n] });
+  }
+
+  range(x: number, y: number): this {
+    if (x > y) throw new Error(errors.IncorrectRangeInterval(x, y));
+    return this.update({ $range: [x, y] });
+  }
+
+  closedRange(x: number, y: number): this {
+    if (x > y) throw new Error(errors.IncorrectRangeInterval(x, y));
+    return this.update({ $closedRange: [x, y] });
+  }
+}
+
+export class UdidiInt8ArraySchema extends UdidiTypedArraySchema<Int8Array> {
+  constructor() {
+    super("Int8Array");
+  }
+}
+
+export class UdidiUint8ArraySchema extends UdidiTypedArraySchema<Uint8Array> {
+  constructor() {
+    super("Uint8Array");
   }
 }
 
@@ -386,6 +424,18 @@ export class Udidi {
     member?: S,
   ): UdidiArraySchema<SchemaOf<S>> {
     return new UdidiArraySchema<SchemaOf<S>>(member ?? new UdidiSchema());
+  }
+
+  static typedArray(): UdidiTypedArraySchema {
+    return new UdidiTypedArraySchema();
+  }
+
+  static int8Array(): UdidiInt8ArraySchema {
+    return new UdidiInt8ArraySchema();
+  }
+
+  static uint8Array(): UdidiUint8ArraySchema {
+    return new UdidiInt8ArraySchema();
   }
 }
 
