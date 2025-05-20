@@ -1,9 +1,16 @@
 "use strict";
 import * as errors from "./Errors";
-import type { AsyncFunction, Integer, UdidiSchemaType } from "../../Types";
+import type {
+  AnyUdidiSchema,
+  AsyncFunction,
+  Integer,
+  SchemaOf,
+  UdidiSchemaType,
+} from "../../Types";
 
-class UdidiSchema<T = unknown> {
+export class UdidiSchema<T = unknown> {
   private __SCHEMA__: UdidiSchemaType = {};
+  private __DESCRIPTION__: string = "";
   constructor(schema: UdidiSchemaType = {}) {
     this.schema = schema;
   }
@@ -37,6 +44,11 @@ class UdidiSchema<T = unknown> {
     return new UdidiSchema<T>(negatedSchema);
   }
 
+  protected update(obj: UdidiSchemaType): this {
+    this.updateSchema = { ...this.updateSchema, ...obj };
+    return this;
+  }
+
   get serializedSchema(): string {
     const replacer = (_key: string, value: any): string => {
       if (value === Infinity) return "Infinity";
@@ -45,7 +57,18 @@ class UdidiSchema<T = unknown> {
       if (Number.isNaN(value)) return "NaN";
       return value;
     };
-    return JSON.stringify(this.schema, replacer);
+    return JSON.stringify(
+      { ...this.schema, description: this.description },
+      replacer,
+    );
+  }
+
+  get description(): string {
+    return this.__DESCRIPTION__;
+  }
+
+  set description(description: string) {
+    this.__DESCRIPTION__ = description;
   }
 }
 
@@ -146,6 +169,21 @@ class UdidiNumberSchema extends UdidiSchema<number> {
     this.updateSchema = { $same: -Infinity };
     return this;
   }
+
+  get isFloat(): UdidiNumberSchema {
+    this.update({ $isType: "Float" });
+    return this;
+  }
+
+  get isInteger(): UdidiNumberSchema {
+    this.update({ $isType: "Integer" });
+    return this;
+  }
+
+  get isNaN(): UdidiNumberSchema {
+    this.update({ $isType: "NaN" });
+    return this;
+  }
 }
 
 export class UdidiUndefinedSchema extends UdidiSchema<undefined> {
@@ -160,9 +198,18 @@ export class UdidiNullSchema extends UdidiSchema<null> {
   }
 }
 
-export class UdidiArraySchema<D = unknown> extends UdidiSchema<D[]> {
-  constructor() {
-    super({ $isType: "Array" });
+export class UdidiArraySchema<E = unknown> extends UdidiSchema<E[]> {
+  /** internal helper that keeps `$isType:"Array"` + `$every` in sync */
+  private static makeTree<S extends AnyUdidiSchema>(member: S) {
+    return { $isType: "Array", $every: member.schema } as UdidiSchemaType;
+  }
+
+  constructor(member: AnyUdidiSchema = new UdidiSchema()) {
+    super(UdidiArraySchema.makeTree(member));
+  }
+
+  of<S extends AnyUdidiSchema>(member: S): UdidiArraySchema<SchemaOf<S>> {
+    return new UdidiArraySchema<SchemaOf<S>>(member);
   }
 
   hasLength(n: Integer): UdidiArraySchema {
@@ -195,10 +242,9 @@ export class UdidiArraySchema<D = unknown> extends UdidiSchema<D[]> {
 
 export class UdidiNumericArraySchema extends UdidiArraySchema<number> {
   constructor() {
-    super();
-    this.updateSchema = {$every: {$isType: "Number"};
+    super(Udidi.number()); // delegate to generic array ctor
   }
-} 
+}
 
 export class UdidiSchemaOld<T = unknown> extends UdidiSchema<T> {
   boolean(): UdidiSchema<boolean> {
@@ -334,6 +380,12 @@ export class Udidi {
 
   static null(): UdidiNullSchema {
     return new UdidiNullSchema();
+  }
+
+  static array<S extends AnyUdidiSchema = UdidiSchema<unknown>>(
+    member?: S,
+  ): UdidiArraySchema<SchemaOf<S>> {
+    return new UdidiArraySchema<SchemaOf<S>>(member ?? new UdidiSchema());
   }
 }
 
