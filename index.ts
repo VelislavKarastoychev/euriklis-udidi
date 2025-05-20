@@ -42,7 +42,7 @@ console.log(numberLike.serializedSchema);
 
 type nl = Udidi.Infer<typeof numberLike>;
 
-const arr = Udidi.array(Udidi.number().isInRange(2, 10).or(Udidi.string()));
+const arr = Udidi.typedArray().range(-1, 1);
 arr.description = "An array of numbers or strings";
 console.log(arr.serializedSchema);
 type arrType = Udidi.Infer<typeof arr>;
