@@ -1,5 +1,5 @@
 // Types/index.ts
-
+import { UdidiSchema } from "../src/Udidi";
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 
 export type Integer = number;
@@ -15,6 +15,7 @@ export type UdidiResponseType = {
 };
 
 export type UdidiTypes =
+  | "NaN"
   | "Null"
   | "Undefined"
   | "Empty"
@@ -125,3 +126,7 @@ export type UdidiProtocolType = {
     orderBy?: string;
   };
 };
+
+export type AnyUdidiSchema = UdidiSchema<any>;
+export type SchemaOf<S> = S extends UdidiSchema<infer U> ? U : never;
+export type TreeOf<S> = S extends UdidiSchema<any> ? S["schema"] : never;
