@@ -1,15 +1,7 @@
 # udidi
 
-To install dependencies:
+This document describes the main concepts of the udidi-db database.
 
-```bash
-bun install
-```
+# Definition:
 
-To run:
-
-```bash
-bun run src/index.ts
-```
-
-This project was created using `bun init` in bun v1.1.34. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+Udidi-db or UdidiDB is a graph - oriented database implemented in TypeScript
