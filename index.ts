@@ -1,5 +1,6 @@
 "use strict";
 
+import { password } from "bun";
 import { UdidiClient } from "./src";
 import { Udidi } from "./src/Udidi";
 
@@ -30,6 +31,14 @@ try {
   console.error("udidi2 connection error:", err);
 }
 
+const user = Udidi.object({
+  username: Udidi.string().hasLengthGreaterThan(2),
+  password: Udidi.string().hasLengthGreaterThan(4),
+  age: Udidi.number().isInClosedRange(18, Infinity),
+});
+
+type userType = Udidi.Infer<typeof user>;
+
 const numberLike = Udidi.number()
   .and(
     Udidi.number().not(
@@ -38,11 +47,25 @@ const numberLike = Udidi.number()
   )
   .or(Udidi.string());
 
-console.log(numberLike.serializedSchema);
+// console.log(numberLike.serializedSchema);
 
 type nl = Udidi.Infer<typeof numberLike>;
 
 const arr = Udidi.typedArray().range(-1, 1);
 arr.description = "An array of numbers or strings";
-console.log(arr.serializedSchema);
+// console.log(arr.serializedSchema);
 type arrType = Udidi.Infer<typeof arr>;
+
+const obj = Udidi.object({
+  name: Udidi.string(),
+  age: Udidi.number(),
+  scores: Udidi.array(Udidi.number().or(Udidi.string())).optional(),
+});
+const obj1 = obj.extend({ family: Udidi.string() }).optional();
+// console.log(obj1.serializedSchema);
+const obj2 = obj1.pick("name");
+console.log(obj1.serializedSchema);
+
+type objType = Udidi.Infer<typeof obj1>;
+
+type objType1 = Udidi.Infer<typeof obj2>;
