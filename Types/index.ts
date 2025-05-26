@@ -183,3 +183,9 @@ export type OutputOfShape<S extends Shape> =
 
 export type MakeOptional<T> = { [K in keyof T]?: T[K] };
 export type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+
+export type SafeParseObjectType = {
+  success: boolean;
+  data: unknown;
+  errors: string[];
+};
