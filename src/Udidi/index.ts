@@ -1,11 +1,13 @@
 "use strict";
 import * as errors from "./Errors";
+import * as models from "./Models";
 import type {
   AnyUdidiSchema,
   AsyncFunction,
   Expand,
   Integer,
   OutputOfShape,
+  SafeParseObjectType,
   SchemaOf,
   Shape,
   TypedArray,
@@ -95,6 +97,16 @@ export class UdidiSchema<T = unknown> {
 
   equals(item: T): this {
     return this.update({ $same: item });
+  }
+
+  safeParse(data: unknown): SafeParseObjectType {
+    const schema = this.schema;
+    console.log(schema);
+    return {
+      success: true,
+      data,
+      errors: [],
+    };
   }
 }
 
