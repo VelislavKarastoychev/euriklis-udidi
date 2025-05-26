@@ -3,8 +3,11 @@ import * as errors from "./Errors";
 import type {
   AnyUdidiSchema,
   AsyncFunction,
+  Expand,
   Integer,
+  OutputOfShape,
   SchemaOf,
+  Shape,
   TypedArray,
   TypedArrayNames,
   UdidiSchemaType,
@@ -51,6 +54,12 @@ export class UdidiSchema<T = unknown> {
     return this;
   }
 
+  protected _clone<R extends UdidiSchema<unknown>>(): R {
+    const c = Object.create(this.constructor.prototype);
+    Object.assign(c, this);
+    return c;
+  }
+
   get serializedSchema(): string {
     const replacer = (_key: string, value: any): string => {
       if (value === Infinity) return "Infinity";
@@ -60,7 +69,7 @@ export class UdidiSchema<T = unknown> {
       return value;
     };
     return JSON.stringify(
-      { ...this.schema, description: this.description },
+      { ...this.schema, $description: this.description },
       replacer,
     );
   }
@@ -72,6 +81,21 @@ export class UdidiSchema<T = unknown> {
   set description(description: string) {
     this.__DESCRIPTION__ = description;
   }
+
+  describe(description: string): this {
+    this.description = description;
+    return this;
+  }
+
+  optional(): this & UdidiSchema<T | undefined> {
+    const clone = this._clone<this & UdidiSchema<T | undefined>>();
+    clone.update({ $optional: true }); // ← store the flag in its own tree
+    return clone;
+  }
+
+  equals(item: T): this {
+    return this.update({ $same: item });
+  }
 }
 
 export class UdidiBooleanSchema extends UdidiSchema<boolean> {
@@ -79,11 +103,11 @@ export class UdidiBooleanSchema extends UdidiSchema<boolean> {
     super({ $isType: "Boolean" });
   }
 
-  isTrue(): UdidiBooleanSchema {
+  true(): UdidiBooleanSchema {
     return this.update({ $same: true });
   }
 
-  isFalse(): UdidiBooleanSchema {
+  false(): UdidiBooleanSchema {
     return this.update({ $same: false });
   }
 }
@@ -102,6 +126,20 @@ export class UdidiStringSchema extends UdidiSchema<string> {
   }
   hasLengthGreaterThan(n: Integer): UdidiStringSchema {
     return this.update({ $hasLengthGreaterThan: n });
+  }
+
+  hasLengthInRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $range: [m, n] });
+  }
+
+  hasLengthInClosedRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $closedRange: [m, n] });
+  }
+
+  match(regex: RegExp): this {
+    return this.update({ $match: regex });
   }
 }
 
@@ -129,10 +167,6 @@ class UdidiNumberSchema extends UdidiSchema<number> {
 
   neq(n: number = 0): UdidiNumberSchema {
     return this.update({ $neq: n });
-  }
-
-  equals(n: number): UdidiNumberSchema {
-    return this.update({ $same: n });
   }
 
   isInRange(x: number, y: number): UdidiNumberSchema {
@@ -284,119 +318,97 @@ export class UdidiUint8ArraySchema extends UdidiTypedArraySchema<Uint8Array> {
   }
 }
 
-export class UdidiSchemaOld<T = unknown> extends UdidiSchema<T> {
-  boolean(): UdidiSchema<boolean> {
-    return new UdidiSchema<boolean>({ $isType: "Boolean" });
+export class UdidiArrayBufferSchema extends UdidiSchema<ArrayBuffer> {
+  constructor() {
+    super({ $isType: "ArrayBuffer" });
+  }
+}
+
+export class UdidiBigIntSchema extends UdidiSchema<BigInt> {
+  constructor() {
+    super({ $isType: "BigInt" });
   }
 
-  string(): UdidiSchema<string> {
-    const schema: UdidiSchemaType = { $isType: "String" };
-    return new UdidiSchema<string>(schema);
+  gt(n: number): this {
+    return this.update({ $gt: n });
   }
 
-  number(): UdidiSchema<number> {
-    const schema: UdidiSchemaType = { $isType: "Number" };
-    return new UdidiSchema<number>(schema);
+  lt(n: number): this {
+    return this.update({ $lt: n });
   }
 
-  integer(): UdidiSchema<number> {
-    return new UdidiSchema<number>({ $isType: "Integer" });
+  geq(n: number): this {
+    return this.update({ $geq: n });
   }
 
-  float(): UdidiSchema<number> {
-    return new UdidiSchema<number>({ $isType: "Float" });
+  leq(n: number): this {
+    return this.update({ $leq: n });
+  }
+}
+
+export class UdidiSymbolSchema extends UdidiSchema<Symbol> {
+  constructor() {
+    super({ $isType: "Symbol" });
   }
 
-  null(): UdidiSchema<null> {
-    const schema: UdidiSchemaType = { $isType: "Null" };
-    return new UdidiSchema<null>(schema);
+  hasDescription(description: string | RegExp): this {
+    return this.update({ $hasDescription: description });
   }
 
-  undefined(): UdidiSchema<undefined> {
-    const schema: UdidiSchemaType = { $isType: "Undefined" };
-    return new UdidiSchema<undefined>(schema);
+  inGlobalRegistry(): this {
+    return this.update({ $global: true });
+  }
+  notInGlobalRegistry(): this {
+    return this.update({ $global: false });
   }
 
-  array<U>(schema: UdidiSchema<U>): UdidiSchema<U[]> {
-    return new UdidiSchema<U[]>({
-      $isType: "Array",
-      $every: schema.schema,
+  keyIs(key: string): this {
+    return this.update({ $globalKey: key });
+  }
+
+  isWellKnown(): this {
+    return this.update({ $wellKnown: true });
+  }
+}
+
+export class UdidiObjectSchema<S extends Shape = {}> extends UdidiSchema<
+  OutputOfShape<S>
+> {
+  private _shape: S;
+  private static propsTree(shape: Shape): UdidiSchemaType {
+    const props: Record<string, UdidiSchemaType> = {};
+    for (const k in shape) props[k] = shape[k].schema;
+    return { $isType: "Object", $props: props } as unknown as UdidiSchemaType;
+  }
+
+  constructor(shape: S = {} as S) {
+    super(UdidiObjectSchema.propsTree(shape));
+    this._shape = shape;
+  }
+
+  get shape(): S {
+    return this._shape;
+  }
+
+  extend<T extends Shape>(extra: T): UdidiObjectSchema<S & T> {
+    return new UdidiObjectSchema({ ...this._shape, ...extra });
+  }
+
+  pick<K extends keyof S>(...keys: K[]): UdidiObjectSchema<Pick<S, K>> {
+    const subset: Partial<S> = {};
+    keys.forEach((k) => {
+      subset[k] = this._shape[k];
     });
+    return new UdidiObjectSchema(subset as Pick<S, K>);
   }
 
-  numberArray(): UdidiSchema<number[]> {
-    return new UdidiSchema<number[]>({
-      $isType: "Array",
-      $every: { $isType: "Number" },
-    });
-  }
-
-  stringArray(): UdidiSchema<string[]> {
-    return new UdidiSchema<string[]>({
-      $isType: "Array",
-      $every: { $isType: "String" },
-    });
-  }
-
-  Int8Array(): UdidiSchema<Int8Array> {
-    return new UdidiSchema<Int8Array>({ $isType: "Int8Array" });
-  }
-
-  Uint8Array(): UdidiSchema<Uint8Array> {
-    return new UdidiSchema<Uint8Array>({ $isType: "Uint8Array" });
-  }
-
-  Uint8ClampedArray(): UdidiSchema<Uint8ClampedArray> {
-    return new UdidiSchema<Uint8ClampedArray>({ $isType: "Uint8ClampedArray" });
-  }
-
-  Int16Array(): UdidiSchema<Int16Array> {
-    return new UdidiSchema<Int16Array>({ $isType: "Int16Array" });
-  }
-
-  Uint16Array(): UdidiSchema<Uint16Array> {
-    return new UdidiSchema<Uint16Array>({ $isType: "Uint16Array" });
-  }
-
-  Int32Array(): UdidiSchema<Int32Array> {
-    return new UdidiSchema<Int32Array>({ $isType: "Int32Array" });
-  }
-
-  Uint32Array(): UdidiSchema<Uint32Array> {
-    return new UdidiSchema<Uint32Array>({ $isType: "Uint32Array" });
-  }
-
-  Float32Array(): UdidiSchema<Float32Array> {
-    return new UdidiSchema<Float32Array>({ $isType: "Float32Array" });
-  }
-
-  Float64Array(): UdidiSchema<Float64Array> {
-    return new UdidiSchema<Float64Array>({ $isType: "Float64Array" });
-  }
-
-  email(): UdidiSchema<string> {
-    return new UdidiSchema<string>({ $isType: "Email" });
-  }
-
-  url(): UdidiSchema<string> {
-    return new UdidiSchema<string>({ $isType: "URL" });
-  }
-
-  date(): UdidiSchema<Date> {
-    return new UdidiSchema<Date>({ $isType: "Date" });
-  }
-
-  promise<U>(): UdidiSchema<Promise<U>> {
-    return new UdidiSchema<Promise<U>>({ $isType: "Promise" });
-  }
-
-  function(): UdidiSchema<Function> {
-    return new UdidiSchema<Function>({ $isType: "Function" });
-  }
-
-  asyncFunction(): UdidiSchema<AsyncFunction> {
-    return new UdidiSchema<AsyncFunction>({ $isType: "AsyncFunction" });
-  }
+  // partial(): UdidiObjectSchema<{ [K in keyof S]?: S[K] }> {
+  //   // runtime: mark props optional
+  //   const tree = { ...this.schema, $optional: Object.keys(this._shape) };
+  //   const out = new UdidiObjectSchema(this._shape) as any;
+  //   out.schema = tree;
+  //   return out;
+  // }
 }
 
 export class Udidi {
@@ -435,11 +447,24 @@ export class Udidi {
   }
 
   static uint8Array(): UdidiUint8ArraySchema {
-    return new UdidiInt8ArraySchema();
+    return new UdidiUint8ArraySchema();
+  }
+
+  static object<S extends Shape = {}>(shape?: S): UdidiObjectSchema<S> {
+    return new UdidiObjectSchema(shape ?? ({} as S));
+  }
+
+  static symbol(): UdidiSymbolSchema {
+    return new UdidiSymbolSchema();
+  }
+
+  static bigInt(): UdidiBigIntSchema {
+    return new UdidiBigIntSchema();
   }
 }
 
 export namespace Udidi {
-  export type Infer<U extends UdidiSchema<any>> =
-    U extends UdidiSchema<infer R> ? R : never;
+  export type Infer<S extends UdidiSchema<any>> = Expand<
+    S extends UdidiSchema<infer R> ? R : never
+  >;
 }
