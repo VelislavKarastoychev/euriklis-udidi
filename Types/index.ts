@@ -1,5 +1,5 @@
 // Types/index.ts
-import { UdidiSchema } from "../src/Udidi";
+import { UdidiSchema, UdidiSymbolSchema } from "../src/Udidi";
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 
 export type Integer = number;
@@ -100,11 +100,9 @@ export type LessThan = { $lt: number };
 export type LessThanOrEqual = { $leq: number };
 export type SameAs = { $same: unknown };
 export type NotEqualsTo = { $neq: number };
-export type IsType = {
-  $isType: UdidiTypes;
-  $any?: UdidiSchemaType;
-  $every?: UdidiSchemaType;
-};
+export type IsType = { $isType: UdidiTypes };
+export type Any = { $any: UdidiSchemaType };
+export type Every = { $every: UdidiSchemaType };
 export type Optional = { $optional: boolean };
 export type HasLength = { $hasLength: Integer };
 export type HasLengthLessThan = { $hasLengthLessThan: Integer };
@@ -120,6 +118,7 @@ export type hasDescription = { $hasDescription: string | RegExp };
 export type inGlobalRegistry = { $global: boolean };
 export type globalKey = { $globalKey: string };
 export type wellKnown = { $wellKnown: boolean };
+export type Returns = { $returns: UdidiSchemaType };
 
 export type LOGICAL_EXPRESSIONS =
   | GreaterThan
@@ -127,6 +126,8 @@ export type LOGICAL_EXPRESSIONS =
   | LessThan
   | LessThanOrEqual
   | SameAs
+  | Every
+  | Any
   | IsType
   | NotEqualsTo
   | HasLength
@@ -139,7 +140,8 @@ export type LOGICAL_EXPRESSIONS =
   | inGlobalRegistry
   | globalKey
   | wellKnown
-  | Optional;
+  | Optional
+  | Returns;
 
 export type OPERATIONS = {
   $or?: (LOGICAL_EXPRESSIONS | OPERATIONS)[];
@@ -182,7 +184,15 @@ export type OutputOfShape<S extends Shape> =
   } & { [K in OptionalKeys<S>]?: Exclude<SchemaOf<S[K]>, undefined> }; // optional part
 
 export type MakeOptional<T> = { [K in keyof T]?: T[K] };
-export type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+export type Expand<T> = T extends any[]
+  ? T
+  : T extends (...args: any) => any
+    ? T
+    : T extends Promise<any>
+      ? T // ← new guard
+      : T extends object
+        ? { [K in keyof T]: T[K] }
+        : T;
 
 export type SafeParseObjectType = {
   success: boolean;
