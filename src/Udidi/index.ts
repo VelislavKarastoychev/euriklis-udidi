@@ -101,12 +101,45 @@ export class UdidiSchema<T = unknown> {
 
   safeParse(data: unknown): SafeParseObjectType {
     const schema = this.schema;
-    console.log(schema);
+    for (const prop in schema) {
+      if (prop === "$isType" && prop in schema) {
+        const type = schema[prop];
+        const validation = models.checkType(data, type);
+      }
+    }
     return {
       success: true,
       data,
       errors: [],
     };
+  }
+}
+
+export class UdidiPromiseSchema<T = unknown> extends UdidiSchema<Promise<T>> {
+  constructor() {
+    super({ $isType: "Promise" });
+  }
+
+  returns<S extends UdidiSchema<any>>(
+    u: S,
+  ): UdidiPromiseSchema<Udidi.Infer<S>> {
+    this.update({ $returns: u.schema });
+    return this as unknown as UdidiPromiseSchema<Udidi.Infer<S>>;
+  }
+}
+
+export class UdidiAsyncFunctionSchema<T = unknown> extends UdidiSchema<
+  () => Promise<T>
+> {
+  constructor() {
+    super({ $isType: "AsyncFunction" });
+  }
+
+  returns<S extends UdidiSchema<any>>(
+    u: S,
+  ): UdidiAsyncFunctionSchema<Udidi.Infer<S>> {
+    this.update({ $returns: u.schema });
+    return this as unknown as UdidiAsyncFunctionSchema<Udidi.Infer<S>>;
   }
 }
 
@@ -358,7 +391,7 @@ export class UdidiBigIntSchema extends UdidiSchema<BigInt> {
   }
 }
 
-export class UdidiSymbolSchema extends UdidiSchema<Symbol> {
+export class UdidiSymbolSchema extends UdidiSchema<symbol> {
   constructor() {
     super({ $isType: "Symbol" });
   }
@@ -423,6 +456,19 @@ export class UdidiObjectSchema<S extends Shape = {}> extends UdidiSchema<
   // }
 }
 
+export class UdidiFunctionSchema<T = unknown> extends UdidiSchema<() => T> {
+  constructor() {
+    super({ $isType: "Function" });
+  }
+
+  returns<S extends UdidiSchema<any>>(
+    u: S,
+  ): UdidiFunctionSchema<Udidi.Infer<S>> {
+    this.update({ $returns: u.schema });
+    return this as unknown as UdidiFunctionSchema<Udidi.Infer<S>>;
+  }
+}
+
 export class Udidi {
   static string(): UdidiStringSchema {
     return new UdidiStringSchema();
@@ -472,6 +518,18 @@ export class Udidi {
 
   static bigInt(): UdidiBigIntSchema {
     return new UdidiBigIntSchema();
+  }
+
+  static function(): UdidiFunctionSchema {
+    return new UdidiFunctionSchema();
+  }
+
+  static async(): UdidiAsyncFunctionSchema {
+    return new UdidiAsyncFunctionSchema();
+  }
+
+  static promise(): UdidiPromiseSchema {
+    return new UdidiPromiseSchema();
   }
 }
 
