@@ -2,8 +2,12 @@
   "name": "udidi",
   "module": "src/index.ts",
   "type": "module",
+  "scripts": {
+    "test": "tsc --noEmit && bun test"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "expect-type": "^1.2.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -13,3 +17,4 @@
     "@euriklis/validator-ts": "^1.0.0"
   }
 }
+
