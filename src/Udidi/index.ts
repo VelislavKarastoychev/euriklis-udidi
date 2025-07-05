@@ -137,10 +137,10 @@ export class UdidiSchema<T = unknown> {
             }
             break;
           case "$same":
-            // TODO this schema key has to check in deep if
-            // the value and the rule are equals.
-            if (value !== rule) {
-              errors.push(`Expected ${rule}`);
+            if (!models.deepEqual(value, rule)) {
+              const repr =
+                typeof rule === "object" ? JSON.stringify(rule) : String(rule);
+              errors.push(`Expected ${repr}`);
               return false;
             }
             break;
@@ -499,6 +499,42 @@ export class UdidiUint8ArraySchema extends UdidiTypedArraySchema<Uint8Array> {
   }
 }
 
+export class UdidiInt16ArraySchema extends UdidiTypedArraySchema<Int16Array> {
+  constructor() {
+    super("Int16Array");
+  }
+}
+
+export class UdidiUint16ArraySchema extends UdidiTypedArraySchema<Uint16Array> {
+  constructor() {
+    super("Uint16Array");
+  }
+}
+
+export class UdidiInt32ArraySchema extends UdidiTypedArraySchema<Int32Array> {
+  constructor() {
+    super("Int32Array");
+  }
+}
+
+export class UdidiUint32ArraySchema extends UdidiTypedArraySchema<Uint32Array> {
+  constructor() {
+    super("Uint32Array");
+  }
+}
+
+export class UdidiFloat32ArraySchema extends UdidiTypedArraySchema<Float32Array> {
+  constructor() {
+    super("Float32Array");
+  }
+}
+
+export class UdidiFloat64ArraySchema extends UdidiTypedArraySchema<Float64Array> {
+  constructor() {
+    super("Float64Array");
+  }
+}
+
 export class UdidiArrayBufferSchema extends UdidiSchema<ArrayBuffer> {
   constructor() {
     super({ $isType: "ArrayBuffer" });
@@ -642,6 +678,34 @@ export class Udidi {
 
   static uint8Array(): UdidiUint8ArraySchema {
     return new UdidiUint8ArraySchema();
+  }
+
+  static int16Array() {
+    return new UdidiInt16ArraySchema();
+  }
+
+  static uint16Array() {
+    return new UdidiUint16ArraySchema();
+  }
+
+  static int32Array() {
+    return new UdidiInt32ArraySchema();
+  }
+
+  static uint32Array() {
+    return new UdidiUint32ArraySchema();
+  }
+
+  static float32Array() {
+    return new UdidiFloat32ArraySchema();
+  }
+
+  static float64ArraySchema() {
+    return new UdidiFloat64ArraySchema();
+  }
+
+  static arrayBuffer() {
+    return new UdidiArrayBufferSchema();
   }
 
   static object<S extends Shape = {}>(shape?: S): UdidiObjectSchema<S> {
