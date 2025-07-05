@@ -731,6 +731,14 @@ export class Udidi {
   static promise(): UdidiPromiseSchema {
     return new UdidiPromiseSchema();
   }
+
+  static any(): UdidiSchema<any> {
+    return new UdidiSchema();
+  }
+
+  static never(): UdidiSchema<never> {
+    return new UdidiSchema<never>({ $not: {} });
+  }
 }
 
 export namespace Udidi {
