@@ -100,18 +100,154 @@ export class UdidiSchema<T = unknown> {
   }
 
   safeParse(data: unknown): SafeParseObjectType {
-    const schema = this.schema;
-    for (const prop in schema) {
-      if (prop === "$isType" && prop in schema) {
-        const type = schema[prop];
-        const validation = models.checkType(data, type);
+    const errors: string[] = [];
+
+    const validate = (value: any, schema: UdidiSchemaType): boolean => {
+      if ((schema as any).$optional && value === undefined) return true;
+
+      for (const key in schema) {
+        const rule: any = (schema as any)[key];
+        switch (key) {
+          case "$and":
+            return (rule as UdidiSchemaType[]).every((s) => validate(value, s));
+          case "$or":
+            return (rule as UdidiSchemaType[]).some((s) => validate(value, s));
+          case "$not":
+            return !validate(value, rule as UdidiSchemaType);
+          case "$props":
+            if (typeof value !== "object" || value === null) {
+              errors.push("Expected object");
+              return false;
+            }
+            for (const prop in rule) {
+              if (!validate((value as any)[prop], rule[prop])) return false;
+            }
+            break;
+          case "$every":
+            if (!Array.isArray(value)) {
+              errors.push("Expected array");
+              return false;
+            }
+            for (const v of value) if (!validate(v, rule)) return false;
+            break;
+          case "$isType":
+            if (!models.checkType(value, rule)) {
+              errors.push(`Expected type ${rule}`);
+              return false;
+            }
+            break;
+          case "$same":
+            // TODO this schema key has to check in deep if
+            // the value and the rule are equals.
+            if (value !== rule) {
+              errors.push(`Expected ${rule}`);
+              return false;
+            }
+            break;
+          case "$lt":
+            if (!(value < rule)) {
+              errors.push(`Expected < ${rule}`);
+              return false;
+            }
+            break;
+          case "$gt":
+            if (!(value > rule)) {
+              errors.push(`Expected > ${rule}`);
+              return false;
+            }
+            break;
+          case "$leq":
+            if (!(value <= rule)) {
+              errors.push(`Expected <= ${rule}`);
+              return false;
+            }
+            break;
+          case "$geq":
+            if (!(value >= rule)) {
+              errors.push(`Expected >= ${rule}`);
+              return false;
+            }
+            break;
+          case "$neq":
+            if (!(value !== rule)) {
+              errors.push(`Expected != ${rule}`);
+              return false;
+            }
+            break;
+          case "$range":
+            if (!(value >= rule[0] && value < rule[1])) {
+              errors.push(`Expected in range [${rule[0]}, ${rule[1]})`);
+              return false;
+            }
+            break;
+          case "$closedRange":
+            if (!(value >= rule[0] && value <= rule[1])) {
+              errors.push(`Expected in range [${rule[0]}, ${rule[1]}]`);
+              return false;
+            }
+            break;
+          case "$hasLength":
+            if (!value || value.length !== rule) {
+              errors.push(`Expected length ${rule}`);
+              return false;
+            }
+            break;
+          case "$hasLengthLessThan":
+            if (!value || !(value.length < rule)) {
+              errors.push(`Expected length < ${rule}`);
+              return false;
+            }
+            break;
+          case "$hasLengthGreaterThan":
+            if (!value || !(value.length > rule)) {
+              errors.push(`Expected length > ${rule}`);
+              return false;
+            }
+            break;
+          case "$hasLengthInRange":
+            if (
+              !value ||
+              !(value.length >= rule[0] && value.length < rule[1])
+            ) {
+              errors.push(`Expected length in range [${rule[0]}, ${rule[1]})`);
+              return false;
+            }
+            break;
+          case "$hasLengthInClosedRange":
+            if (
+              !value ||
+              !(value.length >= rule[0] && value.length <= rule[1])
+            ) {
+              errors.push(`Expected length in range [${rule[0]}, ${rule[1]}]`);
+              return false;
+            }
+            break;
+          case "$match":
+            if (typeof value !== "string" || !rule.test(value)) {
+              errors.push(`Expected value to match ${rule}`);
+              return false;
+            }
+            break;
+          default:
+            break;
+        }
       }
-    }
-    return {
-      success: true,
-      data,
-      errors: [],
+      return true;
     };
+    const success = validate(data, this.schema);
+    return {
+      success,
+      data: success ? data : undefined,
+      errors,
+    };
+  }
+
+  parse(data: unknown): T {
+    const result = this.safeParse(data);
+    if (!result.success) {
+      throw new Error(result.errors.join("; "));
+    }
+    return result.data as T;
   }
 }
 
