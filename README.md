@@ -65,3 +65,30 @@ const valid = Product.parse(data);
 // Infer static TS type
 type Product = Udidi.infer<typeof Product>;
 ```
+
+`parse` will throw an error if the data does not satisfy the schema. If you
+prefer a non‑throwing variant you can use `safeParse` which returns an object
+containing a `success` flag and a list of errors:
+
+```ts
+const result = Product.safeParse(data);
+if (!result.success) {
+  console.error(result.errors);
+}
+```
+
+## API Overview
+
+Udidi exposes helpers for most built‑in JavaScript types. The most common
+factory methods are:
+
+- `udidi.string()` – validates strings
+- `udidi.number()` – validates numbers and provides `.gt`, `.lt`, `.range` and
+  more helpers
+- `udidi.boolean()` – validates booleans
+- `udidi.array(schema)` – validates arrays of a given schema
+- `udidi.object(shape)` – validates object shapes
+- `udidi.int8Array()` / `udidi.uint8Array()` – typed array support
+
+All schema instances share the `.parse()` and `.safeParse()` methods shown
+above.
