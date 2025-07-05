@@ -1,3 +1,4 @@
 "use strict";
 
-export { checkType } from "./checkType.ts";
+export { checkType } from "./checkType";
+export { deepEqual } from "./deepEqual";
