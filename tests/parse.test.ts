@@ -53,3 +53,15 @@ test("parse validate correctly the same method:", () => {
   };
   expect(() => schema.parse(student)).not.toThrow();
 });
+
+test("any schema accepts arbitrary values", () => {
+  const schema = udidi.any();
+  expect(schema.safeParse(123).success).toBe(true);
+  expect(schema.safeParse("hello").success).toBe(true);
+});
+
+test("never schema rejects all values", () => {
+  const schema = udidi.never();
+  expect(schema.safeParse(123).success).toBe(false);
+  expect(schema.safeParse("hello").success).toBe(false);
+});
