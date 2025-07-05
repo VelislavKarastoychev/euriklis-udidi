@@ -1,2 +1,2 @@
 // src/index.ts
-export { Udidi } from "./Udidi";
+export { Udidi as udidi } from "./Udidi";
