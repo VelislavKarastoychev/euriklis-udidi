@@ -25,15 +25,19 @@ test("typed array validation", () => {
 });
 
 test("parse validate correctly the same method:", () => {
+  const myBuffer = new Float64Array([Math.PI, Math.E]).buffer;
+  const myClonedBuffer = new Float64Array([Math.PI, Math.PI, Math.E]).buffer;
   const schema = udidi.object({
     age: udidi.number().isInteger.isPositive.equals(39),
     name: udidi.string().equals("John"),
     scores: udidi.array(udidi.number().isFloat).equals([1.1, 6.5, 4.999]),
+    buffer: udidi.arrayBuffer().equals(myBuffer),
   });
   const student: udidi.Infer<typeof schema> = {
     age: 39,
     name: "John",
     scores: [1.1, 6.5, 4.999],
+    buffer: myClonedBuffer,
   };
   expect(() => schema.parse(student)).not.toThrow();
 });
