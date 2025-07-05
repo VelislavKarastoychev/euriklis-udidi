@@ -1,2 +1,2 @@
 // src/index.ts
-export { UdidiClient } from "./udidi-client";
+export { Udidi } from "./Udidi";

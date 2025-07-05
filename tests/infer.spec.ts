@@ -1,6 +1,6 @@
 import { test } from "bun:test";
 import { expectTypeOf } from "expect-type";
-import { Udidi } from "../src/Udidi";
+import { Udidi } from "../src";
 
 test("Udidi.Infer infers async function", () => {
   const schema = Udidi.async().returns(Udidi.number());
