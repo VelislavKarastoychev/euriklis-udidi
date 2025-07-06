@@ -55,5 +55,5 @@ test("Udidi.Infer infers set", () => {
 test("Udidi.Infer infers map", () => {
   const schema = udidi.map(udidi.string(), udidi.number());
   type T = udidi.Infer<typeof schema>;
-  expectTypeOf<T>().toEqualTypeOf<Map<string, string>>();
+  expectTypeOf<T>().toEqualTypeOf<Map<string, number>>();
 });
