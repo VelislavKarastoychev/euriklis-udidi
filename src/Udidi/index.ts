@@ -256,6 +256,58 @@ export class UdidiSchema<T = unknown> {
               return false;
             }
             break;
+          case "$email": {
+            if (typeof value !== "string") {
+              errors.push("Expected string");
+              return false;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+              errors.push("Expected valid email");
+              return false;
+            }
+            if (rule !== true && typeof rule === "object" && rule.domain) {
+              const domain = value.split("@")[1] || "";
+              if (rule.domain instanceof RegExp) {
+                if (!rule.domain.test(domain)) {
+                  errors.push(`Expected email domain to match ${rule.domain}`);
+                  return false;
+                }
+              } else if (domain !== rule.domain) {
+                errors.push(`Expected email domain ${rule.domain}`);
+                return false;
+              }
+            }
+            break;
+          }
+          case "$url": {
+            if (typeof value !== "string") {
+              errors.push("Expected string");
+              return false;
+            }
+            let parsed: URL;
+            try {
+              parsed = new URL(value);
+            } catch {
+              errors.push("Expected valid url");
+              return false;
+            }
+            if (rule !== true && typeof rule === "object") {
+              if (rule.hostname && parsed.hostname !== rule.hostname) {
+                errors.push(`Expected hostname ${rule.hostname}`);
+                return false;
+              }
+              if (
+                rule.protocol &&
+                parsed.protocol.replace(":", "") !==
+                  rule.protocol.replace(":", "")
+              ) {
+                errors.push(`Expected protocol ${rule.protocol}`);
+                return false;
+              }
+            }
+            break;
+          }
           default:
             break;
         }
@@ -349,6 +401,14 @@ export class UdidiStringSchema extends UdidiSchema<string> {
 
   match(regex: RegExp): this {
     return this.update({ $match: regex });
+  }
+
+  email(options?: { domain?: string }): this {
+    return this.update({ $email: options ?? true });
+  }
+
+  url(options?: { hostname?: string; protocol?: string }): this {
+    return this.update({ $url: options ?? true });
   }
 }
 
