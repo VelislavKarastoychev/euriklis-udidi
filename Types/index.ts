@@ -81,6 +81,8 @@ export type UdidiTypes =
   | "Int64Array"
   | "Float32Array"
   | "Float64Array"
+  | "Set"
+  | "Map"
   | "Integer"
   | "Float"
   | "Date"
@@ -119,6 +121,9 @@ export type inGlobalRegistry = { $global: boolean };
 export type globalKey = { $globalKey: string };
 export type wellKnown = { $wellKnown: boolean };
 export type Returns = { $returns: UdidiSchemaType };
+export type EnumValues = { $enum: readonly (string | number)[] };
+export type SetOf = { $setOf: UdidiSchemaType };
+export type Entries = { $entries: [UdidiSchemaType, UdidiSchemaType] };
 
 export type LOGICAL_EXPRESSIONS =
   | GreaterThan
@@ -140,6 +145,9 @@ export type LOGICAL_EXPRESSIONS =
   | inGlobalRegistry
   | globalKey
   | wellKnown
+  | EnumValues
+  | SetOf
+  | Entries
   | Optional
   | Returns;
 
