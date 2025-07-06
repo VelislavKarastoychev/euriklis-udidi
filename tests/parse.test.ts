@@ -85,3 +85,27 @@ test("map schema validates key and value", () => {
   expect(schema.safeParse(good).success).toBe(true);
   expect(schema.safeParse(bad).success).toBe(false);
 });
+
+test("email validation with default settings", () => {
+  const schema = udidi.string().email();
+  expect(schema.safeParse("user@example.com").success).toBe(true);
+  expect(schema.safeParse("not-an-email").success).toBe(false);
+});
+
+test("email validation with domain option", () => {
+  const schema = udidi.string().email({ domain: "example.com" });
+  expect(schema.safeParse("foo@example.com").success).toBe(true);
+  expect(schema.safeParse("foo@test.com").success).toBe(false);
+});
+
+test("url validation with default settings", () => {
+  const schema = udidi.string().url();
+  expect(schema.safeParse("https://example.com").success).toBe(true);
+  expect(schema.safeParse("not a url").success).toBe(false);
+});
+
+test("url validation with hostname option", () => {
+  const schema = udidi.string().url({ hostname: "example.com" });
+  expect(schema.safeParse("https://example.com/path").success).toBe(true);
+  expect(schema.safeParse("https://other.com").success).toBe(false);
+});
