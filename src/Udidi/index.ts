@@ -130,6 +130,29 @@ export class UdidiSchema<T = unknown> {
             }
             for (const v of value) if (!validate(v, rule)) return false;
             break;
+          case "$setOf":
+            if (!(value instanceof Set)) {
+              errors.push("Expected set");
+              return false;
+            }
+            for (const v of value.values())
+              if (!validate(v, rule)) return false;
+            break;
+          case "$entries":
+            if (!(value instanceof Map)) {
+              errors.push("Expected map");
+              return false;
+            }
+            for (const [k, v] of value.entries()) {
+              if (!validate(k, rule[0]) || !validate(v, rule[1])) return false;
+            }
+            break;
+          case "$enum":
+            if (!Array.isArray(rule) || !rule.includes(value)) {
+              errors.push(`Expected one of ${rule.join(", ")}`);
+              return false;
+            }
+            break;
           case "$isType":
             if (!models.checkType(value, rule)) {
               errors.push(`Expected type ${rule}`);
@@ -186,24 +209,30 @@ export class UdidiSchema<T = unknown> {
               return false;
             }
             break;
-          case "$hasLength":
-            if (!value || value.length !== rule) {
+          case "$hasLength": {
+            const len = value?.length ?? value?.size;
+            if (len !== rule) {
               errors.push(`Expected length ${rule}`);
               return false;
             }
             break;
-          case "$hasLengthLessThan":
-            if (!value || !(value.length < rule)) {
+          }
+          case "$hasLengthLessThan": {
+            const len = value?.length ?? value?.size;
+            if (!(len < rule)) {
               errors.push(`Expected length < ${rule}`);
               return false;
             }
             break;
-          case "$hasLengthGreaterThan":
-            if (!value || !(value.length > rule)) {
+          }
+          case "$hasLengthGreaterThan": {
+            const len = value?.length ?? value?.size;
+            if (!(len > rule)) {
               errors.push(`Expected length > ${rule}`);
               return false;
             }
             break;
+          }
           case "$hasLengthInRange":
             if (
               !value ||
@@ -213,15 +242,14 @@ export class UdidiSchema<T = unknown> {
               return false;
             }
             break;
-          case "$hasLengthInClosedRange":
-            if (
-              !value ||
-              !(value.length >= rule[0] && value.length <= rule[1])
-            ) {
+          case "$hasLengthInClosedRange": {
+            const len = value?.length ?? value?.size;
+            if (!(len >= rule[0] && len <= rule[1])) {
               errors.push(`Expected length in range [${rule[0]}, ${rule[1]}]`);
               return false;
             }
             break;
+          }
           case "$match":
             if (typeof value !== "string" || !rule.test(value)) {
               errors.push(`Expected value to match ${rule}`);
@@ -400,6 +428,84 @@ export class UdidiUndefinedSchema extends UdidiSchema<undefined> {
 export class UdidiNullSchema extends UdidiSchema<null> {
   constructor() {
     super({ $isType: "Null" });
+  }
+}
+
+export class UdidiEnumSchema<T extends string | number> extends UdidiSchema<T> {
+  constructor(values: readonly T[]) {
+    super({ $enum: values });
+  }
+}
+
+export class UdidiSetSchema<E = unknown> extends UdidiSchema<Set<E>> {
+  constructor(member: AnyUdidiSchema = new UdidiSchema()) {
+    super({ $isType: "Set", $setOf: member.schema });
+  }
+
+  of<S extends AnyUdidiSchema>(member: S): UdidiSetSchema<SchemaOf<S>> {
+    return new UdidiSetSchema<SchemaOf<S>>(member);
+  }
+
+  hasLength(n: Integer): this {
+    return this.update({ $hasLength: n });
+  }
+
+  hasLengthLessThan(n: Integer): this {
+    return this.update({ $hasLengthLessThan: n });
+  }
+
+  hasLengthGreaterThan(n: Integer): this {
+    return this.update({ $hasLengthGreaterThan: n });
+  }
+
+  hasLengthInRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $hasLengthInRange: [m, n] });
+  }
+
+  hasLengthInClosedRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $hasLengthInClosedRange: [m, n] });
+  }
+}
+
+export class UdidiMapSchema<K = unknown, V = unknown> extends UdidiSchema<
+  Map<K, V>
+> {
+  constructor(
+    key: AnyUdidiSchema = new UdidiSchema(),
+    value: AnyUdidiSchema = new UdidiSchema(),
+  ) {
+    super({ $isType: "Map", $entries: [key.schema, value.schema] });
+  }
+
+  of<KS extends AnyUdidiSchema, VS extends AnyUdidiSchema>(
+    key: KS,
+    value: VS,
+  ): UdidiMapSchema<SchemaOf<KS>, SchemaOf<VS>> {
+    return new UdidiMapSchema<SchemaOf<KS>, SchemaOf<VS>>(key, value);
+  }
+
+  hasLength(n: Integer): this {
+    return this.update({ $hasLength: n });
+  }
+
+  hasLengthLessThan(n: Integer): this {
+    return this.update({ $hasLengthLessThan: n });
+  }
+
+  hasLengthGreaterThan(n: Integer): this {
+    return this.update({ $hasLengthGreaterThan: n });
+  }
+
+  hasLengthInRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $hasLengthInRange: [m, n] });
+  }
+
+  hasLengthInClosedRange(m: Integer, n: Integer): this {
+    if (m > n) throw new Error(errors.IncorrectRangeInterval(m, n));
+    return this.update({ $hasLengthInClosedRange: [m, n] });
   }
 }
 
@@ -660,6 +766,28 @@ export class Udidi {
 
   static null(): UdidiNullSchema {
     return new UdidiNullSchema();
+  }
+
+  static enum<T extends string | number>(
+    values: readonly T[],
+  ): UdidiEnumSchema<T> {
+    return new UdidiEnumSchema(values);
+  }
+
+  static set<S extends AnyUdidiSchema = UdidiSchema<unknown>>(
+    member?: S,
+  ): UdidiSetSchema<SchemaOf<S>> {
+    return new UdidiSetSchema<SchemaOf<S>>(member ?? new UdidiSchema());
+  }
+
+  static map<
+    K extends AnyUdidiSchema = UdidiSchema<unknown>,
+    V extends AnyUdidiSchema = UdidiSchema<unknown>,
+  >(key?: K, value?: V): UdidiMapSchema<SchemaOf<K>, SchemaOf<V>> {
+    return new UdidiMapSchema<SchemaOf<K>, SchemaOf<V>>(
+      key ?? new UdidiSchema(),
+      value ?? new UdidiSchema(),
+    );
   }
 
   static array<S extends AnyUdidiSchema = UdidiSchema<unknown>>(
