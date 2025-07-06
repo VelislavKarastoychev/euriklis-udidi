@@ -65,3 +65,23 @@ test("never schema rejects all values", () => {
   expect(schema.safeParse(123).success).toBe(false);
   expect(schema.safeParse("hello").success).toBe(false);
 });
+
+test("enum schema validates allowed values", () => {
+  const schema = udidi.enum(["red", "green", "blue"]);
+  expect(schema.safeParse("red").success).toBe(true);
+  expect(schema.safeParse("yellow").success).toBe(false);
+});
+
+test("set schema validates members", () => {
+  const schema = udidi.set(udidi.number()).hasLength(2);
+  expect(schema.safeParse(new Set([1, 2])).success).toBe(true);
+  expect(schema.safeParse(new Set([1, 2, 3])).success).toBe(false);
+});
+
+test("map schema validates key and value", () => {
+  const schema = udidi.map(udidi.string(), udidi.number());
+  const good = new Map<string, number>([["a", 1]]);
+  const bad = new Map<any, any>([[1, "b"]]);
+  expect(schema.safeParse(good).success).toBe(true);
+  expect(schema.safeParse(bad).success).toBe(false);
+});
