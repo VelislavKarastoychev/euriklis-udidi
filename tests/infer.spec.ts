@@ -39,3 +39,21 @@ test("Udidi.Infer infers never", () => {
   type T = udidi.Infer<typeof schema>;
   expectTypeOf<T>().toEqualTypeOf<never>();
 });
+
+test("Udidi.Infer infers enum", () => {
+  const schema = udidi.enum(["a", "b"]);
+  type T = udidi.Infer<typeof schema>;
+  expectTypeOf<T>().toEqualTypeOf<"a" | "b">();
+});
+
+test("Udidi.Infer infers set", () => {
+  const schema = udidi.set(udidi.number());
+  type T = udidi.Infer<typeof schema>;
+  expectTypeOf<T>().toEqualTypeOf<Set<number>>();
+});
+
+test("Udidi.Infer infers map", () => {
+  const schema = udidi.map(udidi.string(), udidi.number());
+  type T = udidi.Infer<typeof schema>;
+  expectTypeOf<T>().toEqualTypeOf<Map<string, number>>();
+});
