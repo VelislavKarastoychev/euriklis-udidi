@@ -89,6 +89,9 @@ factory methods are:
 - `udidi.array(schema)` – validates arrays of a given schema
 - `udidi.object(shape)` – validates object shapes
 - `udidi.int8Array()` / `udidi.uint8Array()` – typed array support
+- `udidi.enum(values)` – validates enum-like values
+- `udidi.set(schema)` – validates `Set` instances
+- `udidi.map(keySchema, valueSchema)` – validates `Map` entries
 
 All schema instances share the `.parse()` and `.safeParse()` methods shown
 above.
