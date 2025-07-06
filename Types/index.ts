@@ -116,6 +116,10 @@ export type InRange =
   | { $range: [number, number] }
   | { $closedRange: [number, number] };
 export type MatchesRegex = { $match: RegExp };
+export type EmailRule = { $email: true | { domain?: string } };
+export type UrlRule = {
+  $url: true | { hostname?: string; protocol?: string };
+};
 export type hasDescription = { $hasDescription: string | RegExp };
 export type inGlobalRegistry = { $global: boolean };
 export type globalKey = { $globalKey: string };
@@ -141,6 +145,8 @@ export type LOGICAL_EXPRESSIONS =
   | HasLengthInRange
   | InRange
   | MatchesRegex
+  | EmailRule
+  | UrlRule
   | hasDescription
   | inGlobalRegistry
   | globalKey
