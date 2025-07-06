@@ -197,10 +197,12 @@ export type Expand<T> = T extends any[]
   : T extends (...args: any) => any
     ? T
     : T extends Promise<any>
-      ? T // ← new guard
-      : T extends object
-        ? { [K in keyof T]: T[K] }
-        : T;
+      ? T
+      : T extends Set<any> | Map<any, any>
+        ? T
+        : T extends object
+          ? { [K in keyof T]: T[K] }
+          : T;
 
 export type SafeParseObjectType = {
   success: boolean;
