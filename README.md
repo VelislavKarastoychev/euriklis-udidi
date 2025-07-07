@@ -95,3 +95,21 @@ factory methods are:
 
 All schema instances share the `.parse()` and `.safeParse()` methods shown
 above.
+
+## 🔍 String Validation Helpers
+
+Udidi's `string()` schema offers format-specific checks for common patterns. These methods can be chained like any other rule.
+
+```ts
+// Require a UUID v4 string
+const id = udidi.string().uuid({ version: "v4" });
+
+// Expect an ISO 8601 date (YYYY-MM-DD)
+const birthday = udidi.string().iso.date();
+
+// Validate IP addresses or networks
+const ipv4 = udidi.string().ipv4();
+const cidr6 = udidi.string().cidrv6();
+```
+
+Each helper will cause `.parse()` or `.safeParse()` to fail if the string does not match the expected format.
