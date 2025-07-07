@@ -1,20 +1,21 @@
 import { test, expect } from "bun:test";
 import { udidi } from "../src";
 
-const positiveInt = udidi.number().gt(0);
-
 test("safeParse succeeds for valid input", () => {
+  const positiveInt = udidi.number().gt(0);
   const result = positiveInt.safeParse(5);
   expect(result.success).toBe(true);
 });
 
 test("safeParse fails for invalid input", () => {
+  const positiveInt = udidi.number().gt(0);
   const result = positiveInt.safeParse(-2);
   expect(result.success).toBe(false);
   expect(result.errors.length).toBeGreaterThan(0);
 });
 
 test("parse throws on invalid input", () => {
+  const positiveInt = udidi.number().gt(0);
   expect(() => positiveInt.parse(-1)).toThrow();
 });
 
@@ -108,4 +109,43 @@ test("url validation with hostname option", () => {
   const schema = udidi.string().url({ hostname: "example.com" });
   expect(schema.safeParse("https://example.com/path").success).toBe(true);
   expect(schema.safeParse("https://other.com").success).toBe(false);
+});
+
+test("uuid validation with version", () => {
+  const schema = udidi.string().uuid({ version: "v4" });
+  expect(schema.safeParse("550e8400-e29b-41d4-a716-446655440000").success).toBe(
+    true,
+  );
+  expect(schema.safeParse("550e8400-e29b-11d4-a716-446655440000").success).toBe(
+    false,
+  );
+});
+
+test("ISO date validation", () => {
+  const schema = udidi.string().iso.date();
+  expect(schema.safeParse("2023-10-05").success).toBe(true);
+  expect(schema.safeParse("05/10/2023").success).toBe(false);
+});
+
+test("The string schema may validate emojis", () => {
+  const emojis: string[] = [
+    "😀", // Grinning Face
+    "😂", // Face with Tears of Joy
+    "😍", // Smiling Face with Heart-Eyes
+    "🥺", // Pleading Face
+    "🔥", // Fire
+    "💯", // Hundred Points
+    "🎉", // Party Popper
+    "🚀", // Rocket
+    "🌟", // Glowing Star
+    "🍕", // Pizza
+    "🐶", // Dog Face
+    "🌍", // Globe Showing Europe-Africa
+    "🧠", // Brain
+    "🎨", // Artist Palette
+    "🎧", // Headphone
+  ];
+  const schema = udidi.array(udidi.string().emoji());
+  expect(schema.safeParse(emojis).success).toBe(true);
+  expect(schema.safeParse([...emojis, "Not emoji"]).success).toBe(false);
 });

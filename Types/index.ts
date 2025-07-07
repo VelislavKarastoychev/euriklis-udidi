@@ -128,6 +128,27 @@ export type Returns = { $returns: UdidiSchemaType };
 export type EnumValues = { $enum: readonly (string | number)[] };
 export type SetOf = { $setOf: UdidiSchemaType };
 export type Entries = { $entries: [UdidiSchemaType, UdidiSchemaType] };
+export type Trim = { $trim: true };
+export type ToLowerCase = { $toLowerCase: true };
+export type ToUpperCase = { $toUpperCase: true };
+export type UUIDRule = {
+  $uuid: true | { version?: "v1" | "v2" | "v3" | "v4" | "v5" };
+};
+export type EmojiRule = { $emoji: true };
+export type Base64Rule = { $base64: true };
+export type Base64UrlRule = { $base64url: true };
+export type NanoIdRule = { $nanoid: true };
+export type CuidRule = { $cuid: true };
+export type Cuid2Rule = { $cuid2: true };
+export type UlidRule = { $ulid: true };
+export type IPv4Rule = { $ipv4: true };
+export type IPv6Rule = { $ipv6: true };
+export type CIDRv4Rule = { $cidrv4: true };
+export type CIDRv6Rule = { $cidrv6: true };
+export type ISODateRule = { $isodate: true };
+export type ISOTimeRule = { $isotime: true };
+export type ISODatetimeRule = { $isodatetime: true };
+export type ISODurationRule = { $isoduration: true };
 
 export type LOGICAL_EXPRESSIONS =
   | GreaterThan
@@ -155,7 +176,26 @@ export type LOGICAL_EXPRESSIONS =
   | SetOf
   | Entries
   | Optional
-  | Returns;
+  | Returns
+  | Trim
+  | ToLowerCase
+  | ToUpperCase
+  | UUIDRule
+  | EmojiRule
+  | Base64Rule
+  | Base64UrlRule
+  | NanoIdRule
+  | CuidRule
+  | Cuid2Rule
+  | UlidRule
+  | IPv4Rule
+  | IPv6Rule
+  | CIDRv4Rule
+  | CIDRv6Rule
+  | ISODateRule
+  | ISOTimeRule
+  | ISODatetimeRule
+  | ISODurationRule;
 
 export type OPERATIONS = {
   $or?: (LOGICAL_EXPRESSIONS | OPERATIONS)[];
