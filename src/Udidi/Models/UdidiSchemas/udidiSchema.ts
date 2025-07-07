@@ -1,6 +1,10 @@
 "use strict";
 import * as models from "../";
 import type { UdidiSchemaType, SafeParseObjectType } from "../../../../Types";
+
+const ipv6Regex = new RegExp(
+  "^((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4}){1,6}|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:))$",
+);
 export class UdidiSchema<T = unknown> {
   private __SCHEMA__: UdidiSchemaType = {};
   private __DESCRIPTION__: string = "";
@@ -413,12 +417,7 @@ export class UdidiSchema<T = unknown> {
             break;
           }
           case "$ipv6": {
-            if (
-              typeof value !== "string" ||
-              !/^((?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,4}:){1,7}:|:(?::[A-Fa-f0-9]{1,4}){1,7})$/.test(
-                value,
-              )
-            ) {
+            if (typeof value !== "string" || !ipv6Regex.test(value)) {
               errors.push("Expected ipv6");
               return false;
             }
@@ -452,9 +451,7 @@ export class UdidiSchema<T = unknown> {
             const [ip, prefix] = value.split("/");
             if (
               !ip ||
-              !/^((?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,4}:){1,7}:|:(?::[A-Fa-f0-9]{1,4}){1,7})$/.test(
-                ip,
-              ) ||
+              !ipv6Regex.test(ip) ||
               isNaN(+prefix) ||
               +prefix < 0 ||
               +prefix > 128
@@ -478,7 +475,9 @@ export class UdidiSchema<T = unknown> {
           case "$isotime": {
             if (
               typeof value !== "string" ||
-              !/^\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/.test(value)
+              !/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?$/.test(
+                value,
+              )
             ) {
               errors.push("Expected ISO time");
               return false;
@@ -499,7 +498,7 @@ export class UdidiSchema<T = unknown> {
           case "$isoduration": {
             if (
               typeof value !== "string" ||
-              !/^P(?!$)(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$/.test(
+              !/^P(?!$)(?:\d+(?:\.\d+)?Y)?(?:\d+(?:\.\d+)?M)?(?:\d+(?:\.\d+)?W)?(?:\d+(?:\.\d+)?D)?(?:T(?:\d+(?:\.\d+)?H)?(?:\d+(?:\.\d+)?M)?(?:\d+(?:\.\d+)?S)?)?$/.test(
                 value,
               )
             ) {
