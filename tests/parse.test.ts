@@ -149,3 +149,135 @@ test("The string schema may validate emojis", () => {
   expect(schema.safeParse(emojis).success).toBe(true);
   expect(schema.safeParse([...emojis, "Not emoji"]).success).toBe(false);
 });
+
+test("IPv6 validation covers compressed notation", () => {
+  const schema = udidi.string().ipv6();
+  expect(schema.safeParse("2001:db8::1").success).toBe(true);
+  expect(schema.safeParse("2001::85a3::8a2e:370:7334").success).toBe(false);
+});
+
+test("CIDRv6 validation checks prefix range", () => {
+  const schema = udidi.string().cidrv6();
+  expect(schema.safeParse("2001:db8::/32").success).toBe(true);
+  expect(schema.safeParse("2001:db8::/129").success).toBe(false);
+});
+
+test("ISO time validation accepts fractional seconds and offsets", () => {
+  const schema = udidi.string().iso.time();
+  expect(schema.safeParse("23:59:59.123Z").success).toBe(true);
+  expect(schema.safeParse("24:00:00").success).toBe(false);
+});
+
+test("ISO duration validation supports weeks", () => {
+  const schema = udidi.string().iso.duration();
+  expect(schema.safeParse("P1W").success).toBe(true);
+  expect(schema.safeParse("P").success).toBe(false);
+});
+
+test("trim validation", () => {
+  const schema = udidi.string().trim();
+  expect(schema.safeParse("hello").success).toBe(true);
+  expect(schema.safeParse(" hello ").success).toBe(false);
+});
+
+test("toLowerCase validation", () => {
+  const schema = udidi.string().toLowerCase();
+  expect(schema.safeParse("lowercase").success).toBe(true);
+  expect(schema.safeParse("LowerCase").success).toBe(false);
+});
+
+test("toUpperCase validation", () => {
+  const schema = udidi.string().toUpperCase();
+  expect(schema.safeParse("UPPER").success).toBe(true);
+  expect(schema.safeParse("Upper").success).toBe(false);
+});
+
+test("emoji validation", () => {
+  const schema = udidi.string().emoji();
+  expect(schema.safeParse("🚀").success).toBe(true);
+  expect(schema.safeParse("notEmoji").success).toBe(false);
+});
+
+test("base64 validation", () => {
+  const schema = udidi.string().base64();
+  expect(schema.safeParse("SGVsbG8=").success).toBe(true);
+  expect(schema.safeParse("not-base64").success).toBe(false);
+});
+
+test("base64url validation", () => {
+  const schema = udidi.string().base64url();
+  expect(schema.safeParse("dGVzdA==").success).toBe(true);
+  expect(schema.safeParse("not_base64url").success).toBe(false);
+});
+
+test("nanoid validation", () => {
+  const schema = udidi.string().nanoid();
+  expect(schema.safeParse("V1StGXR8_Z5jdHi6B-myT").success).toBe(true);
+  expect(schema.safeParse("shortid").success).toBe(false);
+});
+
+test("cuid validation", () => {
+  const schema = udidi.string().cuid();
+  expect(schema.safeParse("ck8rzkqdw0004u7de78tdhsz7").success).toBe(true);
+  expect(schema.safeParse("c123").success).toBe(false);
+});
+
+test("cuid2 validation", () => {
+  const schema = udidi.string().cuid2();
+  expect(schema.safeParse("dyt8iybwv2uwuv2joizjgybz").success).toBe(true);
+  expect(schema.safeParse("invalid-cuid2").success).toBe(false);
+});
+
+test("ulid validation", () => {
+  const schema = udidi.string().ulid();
+  expect(schema.safeParse("01ARZ3NDEKTSV4RRFFQ69G5FAV").success).toBe(true);
+  expect(schema.safeParse("01ARZ3NDEKTSV4RRFFQ69G5FA").success).toBe(false);
+});
+
+test("ipv4 validation", () => {
+  const schema = udidi.string().ipv4();
+  expect(schema.safeParse("192.168.0.1").success).toBe(true);
+  expect(schema.safeParse("999.999.999.999").success).toBe(false);
+});
+
+test("ipv6 validation", () => {
+  const schema = udidi.string().ipv6();
+  expect(
+    schema.safeParse("2001:0db8:85a3:0000:0000:8a2e:0370:7334").success,
+  ).toBe(true);
+  expect(schema.safeParse("2001:db8::85a3::8a2e:370:7334").success).toBe(false);
+});
+
+test("cidrv4 validation", () => {
+  const schema = udidi.string().cidrv4();
+  expect(schema.safeParse("192.168.0.1/24").success).toBe(true);
+  expect(schema.safeParse("192.168.0.1/33").success).toBe(false);
+});
+
+test("cidrv6 validation", () => {
+  const schema = udidi.string().cidrv6();
+  expect(
+    schema.safeParse("2001:0db8:85a3:0000:0000:8a2e:0370:7334/64").success,
+  ).toBe(true);
+  expect(schema.safeParse("2001:db8::85a3::8a2e:370:7334/129").success).toBe(
+    false,
+  );
+});
+
+test("ISO time validation", () => {
+  const schema = udidi.string().iso.time();
+  expect(schema.safeParse("23:59:59Z").success).toBe(true);
+  expect(schema.safeParse("23:59").success).toBe(false);
+});
+
+test("ISO datetime validation", () => {
+  const schema = udidi.string().iso.datetime();
+  expect(schema.safeParse("2023-10-05T14:48:00Z").success).toBe(true);
+  expect(schema.safeParse("2023-10-05 14:48:00").success).toBe(false);
+});
+
+test("ISO duration validation", () => {
+  const schema = udidi.string().iso.duration();
+  expect(schema.safeParse("P3Y6M4DT12H30M5S").success).toBe(true);
+  expect(schema.safeParse("3Y6M4DT12H30M5S").success).toBe(false);
+});
