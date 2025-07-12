@@ -25,6 +25,18 @@ test("nullable number schema accepts numbers and null", () => {
   expect(schema.safeParse(null).success).toBe(true);
 });
 
+test("nullable object schema accepts object or null", () => {
+  const schema = udidi
+    .object({
+      name: udidi.string().match(/[0-9a-zA-Z]/),
+      age: udidi.number().isInteger,
+    })
+    .nullable();
+
+  expect(schema.safeParse({ name: "Ivan", age: 12 }).success).toBe(true);
+  expect(schema.safeParse(null).success).toBe(true);
+});
+
 test("typed array validation", () => {
   const schema = udidi.int8Array().hasLength(2);
   expect(schema.safeParse(new Int8Array([1, 2])).success).toBe(true);
