@@ -2,6 +2,8 @@
 import * as models from "../";
 import type { UdidiSchemaType, SafeParseObjectType } from "../../../../Types";
 
+declare function require(path: string): any;
+
 const ipv6Regex = new RegExp(
   "^((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4}){1,6}|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:))$",
 );
@@ -83,6 +85,11 @@ export class UdidiSchema<T = unknown> {
     const clone = this._clone<this & UdidiSchema<T | undefined>>();
     clone.update({ $optional: true }); // ← store the flag in its own tree
     return clone;
+  }
+
+  nullable(): this & UdidiSchema<T | null> {
+    const { UdidiNullSchema } = require("./udidiNullSchema");
+    return this.or(new UdidiNullSchema()) as this & UdidiSchema<T | null>;
   }
 
   equals(item: T): this {
