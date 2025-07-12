@@ -29,7 +29,13 @@ import {
   UdidiUint8ArraySchema,
   UdidiUndefinedSchema,
 } from "./Models/UdidiSchemas";
-import type { AnyUdidiSchema, Expand, SchemaOf, Shape } from "../../Types";
+import type {
+  AnyUdidiSchema,
+  Expand,
+  SchemaOf,
+  Shape,
+  UnionToIntersection,
+} from "../../Types";
 
 export class Udidi {
   static string(): UdidiStringSchema {
@@ -142,6 +148,22 @@ export class Udidi {
 
   static promise(): UdidiPromiseSchema {
     return new UdidiPromiseSchema();
+  }
+
+  static union<S extends AnyUdidiSchema[]>(
+    schemas: [...S],
+  ): UdidiSchema<SchemaOf<S[number]>> {
+    return new UdidiSchema<SchemaOf<S[number]>>({
+      $or: schemas.map((s) => s.schema),
+    });
+  }
+
+  static intersection<S extends AnyUdidiSchema[]>(
+    schemas: [...S],
+  ): UdidiSchema<UnionToIntersection<SchemaOf<S[number]>>> {
+    return new UdidiSchema<UnionToIntersection<SchemaOf<S[number]>>>({
+      $and: schemas.map((s) => s.schema),
+    });
   }
 
   static any(): UdidiSchema<any> {
