@@ -306,3 +306,18 @@ test("ISO duration validation", () => {
   expect(schema.safeParse("P3Y6M4DT12H30M5S").success).toBe(true);
   expect(schema.safeParse("3Y6M4DT12H30M5S").success).toBe(false);
 });
+
+test("object.partial allows missing properties", () => {
+  const s = udidi.object({
+    a: udidi.number(),
+    b: udidi.string(),
+  });
+
+  const schema = s.partial();
+  expect(schema.safeParse({}).success).toBe(true);
+  expect(schema.safeParse({ a: 1 }).success).toBe(true);
+  expect(schema.safeParse({ b: "x" }).success).toBe(true);
+  expect(schema.safeParse({ a: 1, b: "x" }).success).toBe(true);
+  expect(s.safeParse({ c: 1, a: 2 }).success).toBe(false);
+  expect(schema.safeParse({ c: 1, a: 2 }).success).toBe(true);
+});
