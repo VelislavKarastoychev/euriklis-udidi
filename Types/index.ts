@@ -1,5 +1,8 @@
 // Types/index.ts
-import { UdidiSchema, UdidiSymbolSchema } from "../src/Udidi";
+import {
+  UdidiSchema,
+  UdidiSymbolSchema,
+} from "../src/Udidi/Models/UdidiSchemas";
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 
 export type Integer = number;
