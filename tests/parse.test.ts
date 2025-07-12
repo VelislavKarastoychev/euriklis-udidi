@@ -19,6 +19,12 @@ test("parse throws on invalid input", () => {
   expect(() => positiveInt.parse(-1)).toThrow();
 });
 
+test("nullable number schema accepts numbers and null", () => {
+  const schema = udidi.number().nullable();
+  expect(schema.safeParse(5).success).toBe(true);
+  expect(schema.safeParse(null).success).toBe(true);
+});
+
 test("typed array validation", () => {
   const schema = udidi.int8Array().hasLength(2);
   expect(schema.safeParse(new Int8Array([1, 2])).success).toBe(true);
