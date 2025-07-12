@@ -258,3 +258,11 @@ export type SafeParseObjectType = {
   data: unknown;
   errors: string[];
 };
+
+export type UnionToIntersection<U> = (
+  U extends any ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+export type IntersectionOf<S extends any[]> = UnionToIntersection<S[number]>;
