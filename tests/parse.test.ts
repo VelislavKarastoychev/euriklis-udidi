@@ -37,6 +37,13 @@ test("nullable object schema accepts object or null", () => {
   expect(schema.safeParse(null).success).toBe(true);
 });
 
+test("nullish number schema accepts number, null or undefined", () => {
+  const schema = udidi.number().nullish();
+  expect(schema.safeParse(5).success).toBe(true);
+  expect(schema.safeParse(null).success).toBe(true);
+  expect(schema.safeParse(undefined).success).toBe(true);
+});
+
 test("typed array validation", () => {
   const schema = udidi.int8Array().hasLength(2);
   expect(schema.safeParse(new Int8Array([1, 2])).success).toBe(true);
