@@ -92,6 +92,11 @@ export class UdidiSchema<T = unknown> {
     return this.or(new UdidiNullSchema()) as this & UdidiSchema<T | null>;
   }
 
+  nullish(): this & UdidiSchema<T | null | undefined> {
+    return this.nullable().optional() as this &
+      UdidiSchema<T | null | undefined>;
+  }
+
   equals(item: T): this {
     return this.update({ $same: item });
   }
