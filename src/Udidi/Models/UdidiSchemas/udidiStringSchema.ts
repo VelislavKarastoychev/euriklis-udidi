@@ -104,10 +104,10 @@ export class UdidiStringSchema extends UdidiSchema<string> {
 
   get iso() {
     return {
-      date: () => this.update({ $isodate: true }),
-      time: () => this.update({ $isotime: true }),
-      datetime: () => this.update({ $isodatetime: true }),
-      duration: () => this.update({ $isoduration: true }),
+      date: (): this => this.update({ $isodate: true }),
+      time: (): this => this.update({ $isotime: true }),
+      datetime: (): this => this.update({ $isodatetime: true }),
+      duration: (): this => this.update({ $isoduration: true }),
     };
   }
 }
