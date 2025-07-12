@@ -57,3 +57,14 @@ test("Udidi.Infer infers map", () => {
   type T = udidi.Infer<typeof schema>;
   expectTypeOf<T>().toEqualTypeOf<Map<string, number>>();
 });
+
+test("UdidiObjectSchema.partial infers optional properties", () => {
+  const schema = udidi
+    .object({
+      a: udidi.number(),
+      b: udidi.string(),
+    })
+    .partial();
+  type T = udidi.Infer<typeof schema>;
+  expectTypeOf<T>().toEqualTypeOf<{ a?: number; b?: string }>();
+});
