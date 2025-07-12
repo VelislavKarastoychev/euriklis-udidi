@@ -31,6 +31,21 @@ export class UdidiObjectSchema<S extends Shape = {}> extends UdidiSchema<
     return new UdidiObjectSchema({ ...this._shape, ...extra });
   }
 
+  merge<T extends Shape>(
+    other: UdidiObjectSchema<T>,
+  ): UdidiObjectSchema<S & T> {
+    const mergedShape = { ...this._shape, ...other.shape } as S & T;
+    const merged = new UdidiObjectSchema<S & T>(mergedShape);
+    const thisTree = this.schema as any;
+    const otherTree = other.schema as any;
+    merged.schema = {
+      ...thisTree,
+      ...otherTree,
+      $props: { ...(thisTree.$props || {}), ...(otherTree.$props || {}) },
+    } as UdidiSchemaType;
+    return merged;
+  }
+
   pick<K extends keyof S>(...keys: K[]): UdidiObjectSchema<Pick<S, K>> {
     const subset: Partial<S> = {};
     keys.forEach((k) => {
