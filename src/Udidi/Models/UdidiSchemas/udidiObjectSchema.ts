@@ -1,6 +1,11 @@
 "use strict";
 
-import type { Shape, OutputOfShape, UdidiSchemaType } from "../../../../Types";
+import type {
+  Shape,
+  OutputOfShape,
+  UdidiSchemaType,
+  AnyUdidiSchema,
+} from "../../../../Types";
 import { UdidiSchema } from "./udidiSchema";
 
 export class UdidiObjectSchema<S extends Shape = {}> extends UdidiSchema<
@@ -34,11 +39,17 @@ export class UdidiObjectSchema<S extends Shape = {}> extends UdidiSchema<
     return new UdidiObjectSchema(subset as Pick<S, K>);
   }
 
-  // partial(): UdidiObjectSchema<{ [K in keyof S]?: S[K] }> {
-  //   // runtime: mark props optional
-  //   const tree = { ...this.schema, $optional: Object.keys(this._shape) };
-  //   const out = new UdidiObjectSchema(this._shape) as any;
-  //   out.schema = tree;
-  //   return out;
-  // }
+  partial(): UdidiObjectSchema<{
+    [K in keyof S]: ReturnType<S[K]["optional"]>;
+  }> {
+    const optShape: Partial<Record<keyof S, AnyUdidiSchema>> = {};
+    for (const k in this._shape) {
+      optShape[k] = this._shape[k].optional();
+    }
+    return new UdidiObjectSchema(
+      optShape as {
+        [K in keyof S]: ReturnType<S[K]["optional"]>;
+      },
+    );
+  }
 }
