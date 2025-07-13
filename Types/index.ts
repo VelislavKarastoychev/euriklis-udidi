@@ -198,7 +198,9 @@ export type LOGICAL_EXPRESSIONS =
   | ISODateRule
   | ISOTimeRule
   | ISODatetimeRule
-  | ISODurationRule;
+  | ISODurationRule
+  | ISODurationRule
+  | StrictRule;
 
 export type OPERATIONS = {
   $or?: (LOGICAL_EXPRESSIONS | OPERATIONS)[];
@@ -266,3 +268,5 @@ export type UnionToIntersection<U> = (
   : never;
 
 export type IntersectionOf<S extends any[]> = UnionToIntersection<S[number]>;
+
+export type StrictRule = { $strict: boolean };
