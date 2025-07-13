@@ -331,3 +331,15 @@ test("object.partial allows missing properties", () => {
   expect(s.safeParse({ c: 1, a: 2 }).success).toBe(false);
   expect(schema.safeParse({ c: 1, a: 2 }).success).toBe(true);
 });
+
+test("refine success", () => {
+  const schema = udidi.number().refine((v) => v % 2 === 0, "even");
+  expect(schema.safeParse(4).success).toBe(true);
+});
+
+test("refine failure reports message", () => {
+  const schema = udidi.number().refine((v) => v % 2 === 0, "even");
+  const result = schema.safeParse(3);
+  expect(result.success).toBe(false);
+  expect(result.errors).toContain("even");
+});
