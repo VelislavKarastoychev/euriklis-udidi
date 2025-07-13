@@ -148,6 +148,14 @@ export class UdidiSchema<T = unknown> {
             for (const prop in rule) {
               if (!validate((value as any)[prop], rule[prop])) return false;
             }
+            if ((schema as any).$strict) {
+              for (const k in value as any) {
+                if (!(k in rule)) {
+                  errors.push(`Unexpected key ${k}`);
+                  return false;
+                }
+              }
+            }
             break;
           case "$every":
             if (!Array.isArray(value)) {
