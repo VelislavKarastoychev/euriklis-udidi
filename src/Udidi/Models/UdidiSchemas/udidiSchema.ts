@@ -11,6 +11,11 @@ export class UdidiSchema<T = unknown> {
   private __SCHEMA__: UdidiSchemaType = {};
   private __DESCRIPTION__: string = "";
   private __DEFAULT_VALUE__?: T;
+  private __REFINEMENTS__: {
+    check: (value: any) => boolean;
+    message?: string;
+  }[] = [];
+  private __TRANSFORM__?: (value: any) => unknown;
   constructor(schema: UdidiSchemaType = {}) {
     this.schema = schema;
   }
@@ -52,6 +57,7 @@ export class UdidiSchema<T = unknown> {
   protected _clone<R extends UdidiSchema<unknown>>(): R {
     const c = Object.create(this.constructor.prototype);
     Object.assign(c, this);
+    (c as UdidiSchema<unknown>).__REFINEMENTS__ = [...this.__REFINEMENTS__];
     return c;
   }
 
@@ -102,8 +108,21 @@ export class UdidiSchema<T = unknown> {
     this.__DEFAULT_VALUE__ = value;
     return this;
   }
+
   equals(item: T): this {
     return this.update({ $same: item });
+  }
+
+  refine(check: (value: T) => boolean, message?: string): this {
+    this.__REFINEMENTS__.push({ check, message });
+    return this;
+  }
+
+  transform<U>(fn: (value: T) => U): UdidiSchema<U> {
+    const schema = new UdidiSchema<U>(this.schema);
+    schema.description = this.description;
+    (schema as any).__TRANSFORM__ = fn;
+    return schema;
   }
 
   safeParse(data: unknown): SafeParseObjectType {
@@ -530,10 +549,22 @@ export class UdidiSchema<T = unknown> {
       }
       return true;
     };
-    const success = validate(data, this.schema);
+    let success = validate(data, this.schema);
+    if (success) {
+      for (const { check, message } of this.__REFINEMENTS__) {
+        if (!check(data as T)) {
+          errors.push(message ?? "Invalid value");
+          success = false;
+        }
+      }
+    }
+
+    const transformed =
+      success && this.__TRANSFORM__ ? this.__TRANSFORM__(data as T) : data;
+
     return {
       success,
-      data: success ? data : undefined,
+      data: success ? transformed : undefined,
       errors,
     };
   }
