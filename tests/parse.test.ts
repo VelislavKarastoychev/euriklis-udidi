@@ -19,6 +19,16 @@ test("parse throws on invalid input", () => {
   expect(() => positiveInt.parse(-1)).toThrow();
 });
 
+test("default returns fallback when value undefined", () => {
+  const schema = udidi.number().gt(0).default(5);
+  expect(schema.parse(undefined)).toBe(5);
+});
+
+test("default returns fallback when validation fails", () => {
+  const schema = udidi.number().gt(0).default(7);
+  expect(schema.parse(-3)).toBe(7);
+});
+
 test("nullable number schema accepts numbers and null", () => {
   const schema = udidi.number().nullable();
   expect(schema.safeParse(5).success).toBe(true);
