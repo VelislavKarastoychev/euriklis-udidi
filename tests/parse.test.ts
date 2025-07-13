@@ -343,3 +343,13 @@ test("refine failure reports message", () => {
   expect(result.success).toBe(false);
   expect(result.errors).toContain("even");
 });
+
+test("strict object rejects unknown keys", () => {
+  const schema = udidi.object({ a: udidi.number() }).strict();
+  expect(schema.safeParse({ a: 1, b: 2 }).success).toBe(false);
+});
+
+test("passthrough object ignores unknown keys", () => {
+  const schema = udidi.object({ a: udidi.number() }).passthrough();
+  expect(schema.safeParse({ a: 1, b: 2 }).success).toBe(true);
+});
