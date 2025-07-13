@@ -67,4 +67,12 @@ export class UdidiObjectSchema<S extends Shape = {}> extends UdidiSchema<
       },
     );
   }
+
+  strict(): this {
+    return this.update({ $strict: true });
+  }
+
+  passthrough(): this {
+    return this.update({ $strict: false });
+  }
 }
