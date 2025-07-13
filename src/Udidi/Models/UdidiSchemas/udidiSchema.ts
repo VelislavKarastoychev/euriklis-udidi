@@ -10,6 +10,7 @@ const ipv6Regex = new RegExp(
 export class UdidiSchema<T = unknown> {
   private __SCHEMA__: UdidiSchemaType = {};
   private __DESCRIPTION__: string = "";
+  private __DEFAULT_VALUE__?: T;
   constructor(schema: UdidiSchemaType = {}) {
     this.schema = schema;
   }
@@ -97,6 +98,10 @@ export class UdidiSchema<T = unknown> {
       UdidiSchema<T | null | undefined>;
   }
 
+  default(value: T): this {
+    this.__DEFAULT_VALUE__ = value;
+    return this;
+  }
   equals(item: T): this {
     return this.update({ $same: item });
   }
@@ -534,8 +539,14 @@ export class UdidiSchema<T = unknown> {
   }
 
   parse(data: unknown): T {
+    if (data === undefined && this.__DEFAULT_VALUE__ !== undefined) {
+      return this.__DEFAULT_VALUE__;
+    }
     const result = this.safeParse(data);
     if (!result.success) {
+      if (this.__DEFAULT_VALUE__ !== undefined) {
+        return this.__DEFAULT_VALUE__;
+      }
       throw new Error(result.errors.join("; "));
     }
     return result.data as T;
