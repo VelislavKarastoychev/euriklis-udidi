@@ -367,6 +367,7 @@ test("from restores object schema instance", () => {
     .strict();
   const tree = orig.schema;
   const recreated = udidi.from(tree);
+  type recreatedType = udidi.Infer<typeof recreated>; // gives unknown...
   expect(recreated.safeParse({ a: "x" }).success).toBe(true);
   expect(recreated.safeParse({ a: "x", b: 1 }).success).toBe(false);
 });
