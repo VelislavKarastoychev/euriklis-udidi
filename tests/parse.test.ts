@@ -353,3 +353,8 @@ test("passthrough object ignores unknown keys", () => {
   const schema = udidi.object({ a: udidi.number() }).passthrough();
   expect(schema.safeParse({ a: 1, b: 2 }).success).toBe(true);
 });
+
+test("from throws on invalid schema tree", () => {
+  const badTree = { $unknown: true } as any;
+  expect(() => udidi.from(badTree)).toThrow();
+});
