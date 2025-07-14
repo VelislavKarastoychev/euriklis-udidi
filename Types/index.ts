@@ -270,3 +270,43 @@ export type UnionToIntersection<U> = (
 export type IntersectionOf<S extends any[]> = UnionToIntersection<S[number]>;
 
 export type StrictRule = { $strict: boolean };
+
+// Utility type to infer TypeScript types from schema trees
+export type InferFromTree<S> = S extends {
+  $or: infer U extends UdidiSchemaType[];
+}
+  ? InferFromTree<U[number]>
+  : S extends { $and: infer U extends UdidiSchemaType[] }
+    ? IntersectionOf<{ [K in keyof U]: InferFromTree<U[K]> }>
+    : S extends { $not: any }
+      ? never
+      : S extends { $isType: "Number" | "Float" | "Integer" | "NumberLike" }
+        ? number
+        : S extends { $isType: "String" }
+          ? string
+          : S extends { $isType: "Boolean" }
+            ? boolean
+            : S extends { $isType: "BigInt" }
+              ? bigint
+              : S extends { $isType: "Symbol" }
+                ? symbol
+                : S extends { $isType: "Null" }
+                  ? null
+                  : S extends { $isType: "Undefined" }
+                    ? undefined
+                    : S extends { $isType: "Array"; $every: infer T }
+                      ? InferFromTree<T>[]
+                      : S extends { $isType: "Set"; $setOf: infer T }
+                        ? Set<InferFromTree<T>>
+                        : S extends {
+                              $isType: "Map";
+                              $entries: [infer K, infer V];
+                            }
+                          ? Map<InferFromTree<K>, InferFromTree<V>>
+                          : S extends {
+                                $isType: "TypedArray" | TypedArrayNames;
+                              }
+                            ? TypedArray
+                            : S extends { $isType: "Object"; $props: infer P }
+                              ? { [K in keyof P]: InferFromTree<P[K]> }
+                              : unknown;
