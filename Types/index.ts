@@ -1,7 +1,21 @@
 // Types/index.ts
 import {
+  UdidiArraySchema,
+  UdidiAsyncFunctionSchema,
+  UdidiBigIntSchema,
+  UdidiBooleanSchema,
+  UdidiFunctionSchema,
+  UdidiMapSchema,
+  UdidiNullSchema,
+  UdidiNumberSchema,
+  UdidiObjectSchema,
+  UdidiPromiseSchema,
   UdidiSchema,
+  UdidiSetSchema,
+  UdidiStringSchema,
   UdidiSymbolSchema,
+  UdidiTypedArraySchema,
+  UdidiUndefinedSchema,
 } from "../src/Udidi/Models/UdidiSchemas";
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 
@@ -310,3 +324,43 @@ export type InferFromTree<S> = S extends {
                             : S extends { $isType: "Object"; $props: infer P }
                               ? { [K in keyof P]: InferFromTree<P[K]> }
                               : unknown;
+
+export type InstanceFromTree<S> = S extends { $isType: "String" }
+  ? UdidiStringSchema & UdidiSchema<InferFromTree<S>>
+  : S extends { $isType: "Number" | "Float" | "Integer" | "NumberLike" | "NaN" }
+    ? UdidiNumberSchema & UdidiSchema<InferFromTree<S>>
+    : S extends { $isType: "Boolean" }
+      ? UdidiBooleanSchema & UdidiSchema<InferFromTree<S>>
+      : S extends { $isType: "BigInt" }
+        ? UdidiBigIntSchema & UdidiSchema<InferFromTree<S>>
+        : S extends { $isType: "Symbol" }
+          ? UdidiSymbolSchema & UdidiSchema<InferFromTree<S>>
+          : S extends { $isType: "Null" }
+            ? UdidiNullSchema & UdidiSchema<InferFromTree<S>>
+            : S extends { $isType: "Undefined" }
+              ? UdidiUndefinedSchema & UdidiSchema<InferFromTree<S>>
+              : S extends { $isType: "Array"; $every: infer T }
+                ? UdidiArraySchema<InferFromTree<T>> &
+                    UdidiSchema<InferFromTree<S>>
+                : S extends { $isType: "Set"; $setOf: infer T }
+                  ? UdidiSetSchema<InferFromTree<T>> &
+                      UdidiSchema<InferFromTree<S>>
+                  : S extends { $isType: "Map"; $entries: [infer K, infer V] }
+                    ? UdidiMapSchema<InferFromTree<K>, InferFromTree<V>> &
+                        UdidiSchema<InferFromTree<S>>
+                    : S extends { $isType: TypedArrayNames | "TypedArray" }
+                      ? UdidiTypedArraySchema & UdidiSchema<InferFromTree<S>>
+                      : S extends { $isType: "Object"; $props: infer P }
+                        ? UdidiObjectSchema<{
+                            [K in keyof P]: InstanceFromTree<P[K]>;
+                          }> &
+                            UdidiSchema<InferFromTree<S>>
+                        : S extends { $isType: "Function" }
+                          ? UdidiFunctionSchema & UdidiSchema<InferFromTree<S>>
+                          : S extends { $isType: "AsyncFunction" }
+                            ? UdidiAsyncFunctionSchema &
+                                UdidiSchema<InferFromTree<S>>
+                            : S extends { $isType: "Promise" }
+                              ? UdidiPromiseSchema &
+                                  UdidiSchema<InferFromTree<S>>
+                              : UdidiSchema<InferFromTree<S>>;
