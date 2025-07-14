@@ -23,7 +23,7 @@ import {
   UdidiUndefinedSchema,
 } from "./UdidiSchemas";
 import { validateTree } from "./validateTree";
-export function buildFromTree<S extends UdidiSchemaType>(
+export function buildFromTree<const S extends UdidiSchemaType>(
   tree: S,
 ): InstanceFromTree<S> {
   validateTree(tree);
