@@ -35,7 +35,11 @@ import type {
   SchemaOf,
   Shape,
   UnionToIntersection,
+  InferFromTree,
+  UdidiSchemaType,
 } from "../../Types";
+
+import { validateTree } from "./Models";
 
 export class Udidi {
   static string(): UdidiStringSchema {
@@ -172,6 +176,13 @@ export class Udidi {
 
   static never(): UdidiSchema<never> {
     return new UdidiSchema<never>({ $not: {} });
+  }
+
+  static from<S extends UdidiSchemaType>(
+    schema: S,
+  ): UdidiSchema<InferFromTree<S>> {
+    validateTree(schema);
+    return new UdidiSchema(schema) as UdidiSchema<InferFromTree<S>>;
   }
 }
 
