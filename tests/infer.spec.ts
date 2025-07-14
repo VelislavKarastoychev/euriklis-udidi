@@ -68,3 +68,11 @@ test("UdidiObjectSchema.partial infers optional properties", () => {
   type T = udidi.Infer<typeof schema>;
   expectTypeOf<T>().toEqualTypeOf<{ a?: number; b?: string }>();
 });
+
+test("Udidi.from infers type from schema tree", () => {
+  const tree = udidi.string().or(udidi.number()).schema;
+  // const tree = controlSchema as const;
+  const schema = udidi.from(tree);
+  type T = udidi.Infer<typeof schema>;
+  expectTypeOf<T>().toEqualTypeOf<number | string>();
+});
