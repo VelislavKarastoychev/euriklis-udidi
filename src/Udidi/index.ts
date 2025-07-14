@@ -179,7 +179,7 @@ export class Udidi {
     return new UdidiSchema<never>({ $not: {} });
   }
 
-  static from<S extends UdidiSchemaType>(schema: S): InstanceFromTree<S> {
+  static from<const S extends UdidiSchemaType>(schema: S): InstanceFromTree<S> {
     return buildFromTree(schema);
   }
 }
