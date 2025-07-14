@@ -350,8 +350,25 @@ test("strict object rejects unknown keys", () => {
 });
 
 test("passthrough object ignores unknown keys", () => {
-  const schema = udidi.object({ a: udidi.number() }).passthrough();
+  const schema = udidi.object({
+    a: udidi.number(),
+    b: udidi.union([udidi.string(), udidi.number()]),
+    c: udidi.map().optional(),
+  });
   expect(schema.safeParse({ a: 1, b: 2 }).success).toBe(true);
+});
+
+test("from restores object schema instance", () => {
+  const orig = udidi
+    .object({
+      a: udidi.string(),
+      c: udidi.union([udidi.number(), udidi.map()]).optional(),
+    })
+    .strict();
+  const tree = orig.schema;
+  const recreated = udidi.from(tree);
+  expect(recreated.safeParse({ a: "x" }).success).toBe(true);
+  expect(recreated.safeParse({ a: "x", b: 1 }).success).toBe(false);
 });
 
 test("from throws on invalid schema tree", () => {
