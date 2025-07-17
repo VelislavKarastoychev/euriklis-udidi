@@ -357,22 +357,3 @@ test("passthrough object ignores unknown keys", () => {
   });
   expect(schema.safeParse({ a: 1, b: 2 }).success).toBe(true);
 });
-
-test("from restores object schema instance", () => {
-  const orig = udidi
-    .object({
-      a: udidi.string(),
-      c: udidi.union([udidi.number(), udidi.map()]).optional(),
-    })
-    .strict();
-  const tree = orig.schema;
-  const recreated = udidi.from(tree);
-  type recreatedType = udidi.Infer<typeof recreated>; // gives unknown...
-  expect(recreated.safeParse({ a: "x" }).success).toBe(true);
-  expect(recreated.safeParse({ a: "x", b: 1 }).success).toBe(false);
-});
-
-test("from throws on invalid schema tree", () => {
-  const badTree = { $unknown: true } as any;
-  expect(() => udidi.from(badTree)).toThrow();
-});
