@@ -35,12 +35,8 @@ import type {
   SchemaOf,
   Shape,
   UnionToIntersection,
-  InferFromTree,
-  InstanceFromTree,
   UdidiSchemaType,
 } from "../../Types";
-
-import { buildFromTree, validateTree } from "./Models";
 
 export class Udidi {
   static string(): UdidiStringSchema {
@@ -123,7 +119,7 @@ export class Udidi {
     return new UdidiFloat32ArraySchema();
   }
 
-  static float64ArraySchema() {
+  static float64Array() {
     return new UdidiFloat64ArraySchema();
   }
 
@@ -177,10 +173,6 @@ export class Udidi {
 
   static never(): UdidiSchema<never> {
     return new UdidiSchema<never>({ $not: {} });
-  }
-
-  static from<const S extends UdidiSchemaType>(schema: S): InstanceFromTree<S> {
-    return buildFromTree(schema);
   }
 }
 
